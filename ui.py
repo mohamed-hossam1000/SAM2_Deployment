@@ -1,10 +1,13 @@
 import streamlit as st
 from PIL import Image, ImageDraw
 from streamlit_image_coordinates import streamlit_image_coordinates
+import requests
+import io
+import base64
 
-st.set_page_config(layout="centered")
+st.set_page_config(layout="wide")
 
-st.title("🖼️ Image Click Coordinate App")
+st.title("🖼️ Image Segmentation App")
 
 # Upload image
 uploaded_file = st.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
@@ -19,20 +22,27 @@ if uploaded_file is not None:
 
     if coords is not None:
         x, y = coords["x"], coords["y"]
-
         st.success(f"Clicked at: X={x}, Y={y}")
 
-        # Create copy of image
-        img_with_point = image.copy()
-        draw = ImageDraw.Draw(img_with_point)
+        # Convert Image to base64 to send as JSON
+        buffered = io.BytesIO()
+        image.save(buffered, format="PNG")
+        img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
-        # Draw a red circle around clicked point
-        r = 10
-        draw.ellipse(
-            (x - r, y - r, x + r, y + r),
-            outline="red",
-            width=3
-        )
+        # Send the request to the backend
+        response = requests.post(
+            "http://localhost:8000/segment",
+            json={
+                "image": img_base64,
+                "coordinates": [[int(x), int(y)]]
+            })
 
-        st.subheader("Image with Selected Point")
-        st.image(img_with_point, use_column_width=True)
+        # Convert response image back from base64
+        segmented_image = response.json()["segmented_image"]
+        segmented_image = base64.b64decode(segmented_image)
+        segmented_image = Image.open(io.BytesIO(segmented_image))
+
+        # Show Segmented Image
+        draw = ImageDraw.Draw(segmented_image)
+        st.subheader("Segmented Image with Selected Point")
+        st.image(segmented_image)
