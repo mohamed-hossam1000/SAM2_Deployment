@@ -19,7 +19,7 @@ async def segment_image(data: dict):
     image_np = np.array(image_pil)
     
     # Get coordinates
-    coordinates_np = np.array([data["coordinates"]])
+    coordinates_np = np.array(data["coordinates"])
     
     # Segment the image
     segmented_image = segment(image_np, coordinates_np)
@@ -31,9 +31,3 @@ async def segment_image(data: dict):
     img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     return {"segmented_image": img_base64}
-
-
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
