@@ -43,6 +43,5 @@ if uploaded_file is not None:
         segmented_image = Image.open(io.BytesIO(segmented_image))
 
         # Show Segmented Image
-        draw = ImageDraw.Draw(segmented_image)
         st.subheader("Segmented Image with Selected Point")
         st.image(segmented_image)
